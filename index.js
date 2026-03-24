@@ -8,28 +8,29 @@ async function conectar() {
 
     const sock = makeWASocket({
         auth: state,
-        printQRInTerminal: true,        // ← Força mostrar QR
+        printQRInTerminal: false,   // ← desativado porque está obsoleto
         logger: pino({ level: 'silent' }),
-        browser: ['Bot Figurinhas Dedão', 'Chrome', '1.0'],
+        browser: ['Bot do Dedão', 'Chrome', '1.0'],
     });
 
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect, qr } = update;
 
         if (qr) {
-            console.clear();                    // limpa tela pra QR ficar visível
-            console.log('\n🔥 ESCANEIE O QR CODE ABAIXO 🔥\n');
+            console.clear();  // limpa a tela pra ficar mais limpo
+            console.log('\n🔥 🔥 🔥  ESCANEIE O QR CODE ABAIXO  🔥 🔥 🔥\n');
             qrcode.generate(qr, { small: true });
-            console.log('\nAbra o WhatsApp → Dispositivos vinculados → Vincular dispositivo');
+            console.log('\nAbra o WhatsApp no celular → Configurações → Dispositivos vinculados → Vincular um dispositivo');
+            console.log('Escaneie o QR que está acima ↑↑↑');
         }
 
         if (connection === 'open') {
-            console.log('\n✅ BOT CONECTADO COM SUCESSO!');
-            console.log('Envie uma foto ou vídeo com /s');
+            console.log('\n✅ BOT CONECTADO COM SUCESSO! 🎉');
+            console.log('Agora é só mandar foto/vídeo com /s');
         }
 
         if (connection === 'close') {
-            console.log('Conexão fechada, reconectando...');
+            console.log('Conexão fechada, tentando reconectar...');
             if (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut) {
                 setTimeout(conectar, 5000);
             }
@@ -38,7 +39,6 @@ async function conectar() {
 
     sock.ev.on('creds.update', saveCreds);
 
-    // O resto do código de sticker (igual antes)
     sock.ev.on('messages.upsert', async ({ messages }) => {
         const msg = messages[0];
         if (!msg.message || msg.key.fromMe) return;
