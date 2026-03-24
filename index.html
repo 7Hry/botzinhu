@@ -17,13 +17,15 @@ async function conectar() {
         const { connection, lastDisconnect, qr } = update;
 
         if (qr) {
-            console.log('Escaneie o QR Code:');
+            console.log('Escaneie o QR Code abaixo:');
             qrcode.generate(qr, { small: true });
         }
 
         if (connection === 'open') {
-            console.log('✅ Bot ONLINE!');
-            console.log('/s ou /s2 → vira sticker (modo simples)');
+            console.log('✅ Bot ONLINE e funcionando sem sharp!');
+            console.log('Comandos:');
+            console.log('/s  → Sticker normal (WhatsApp ajusta sozinho)');
+            console.log('/s2 → Sticker normal (mesmo efeito)');
         }
 
         if (connection === 'close') {
@@ -61,7 +63,7 @@ async function conectar() {
             const sticker = new Sticker(buffer, {
                 pack: 'Bot do',
                 author: 'Dedão',
-                type: StickerTypes.FULL,
+                type: StickerTypes.FULL,     // FULL geralmente dá o melhor resultado sem sharp
                 categories: ['😎'],
                 quality: 80,
             });
@@ -72,7 +74,7 @@ async function conectar() {
 
         } catch (err) {
             console.error(err);
-            await sock.sendMessage(from, { text: '❌ Erro ao criar sticker.' });
+            await sock.sendMessage(from, { text: '❌ Erro ao criar sticker. Tente outra imagem/vídeo.' });
         }
     });
 }
