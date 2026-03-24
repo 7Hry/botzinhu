@@ -8,7 +8,7 @@ async function conectar() {
 
     const sock = makeWASocket({
         auth: state,
-        printQRInTerminal: false,
+        printQRInTerminal: true,        // ← Força mostrar QR
         logger: pino({ level: 'silent' }),
         browser: ['Bot Figurinhas Dedão', 'Chrome', '1.0'],
     });
@@ -17,18 +17,19 @@ async function conectar() {
         const { connection, lastDisconnect, qr } = update;
 
         if (qr) {
-            console.log('Escaneie o QR Code abaixo:');
+            console.clear();                    // limpa tela pra QR ficar visível
+            console.log('\n🔥 ESCANEIE O QR CODE ABAIXO 🔥\n');
             qrcode.generate(qr, { small: true });
+            console.log('\nAbra o WhatsApp → Dispositivos vinculados → Vincular dispositivo');
         }
 
         if (connection === 'open') {
-            console.log('✅ Bot ONLINE e funcionando sem sharp!');
-            console.log('Comandos:');
-            console.log('/s  → Sticker normal (WhatsApp ajusta sozinho)');
-            console.log('/s2 → Sticker normal (mesmo efeito)');
+            console.log('\n✅ BOT CONECTADO COM SUCESSO!');
+            console.log('Envie uma foto ou vídeo com /s');
         }
 
         if (connection === 'close') {
+            console.log('Conexão fechada, reconectando...');
             if (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut) {
                 setTimeout(conectar, 5000);
             }
@@ -37,6 +38,7 @@ async function conectar() {
 
     sock.ev.on('creds.update', saveCreds);
 
+    // O resto do código de sticker (igual antes)
     sock.ev.on('messages.upsert', async ({ messages }) => {
         const msg = messages[0];
         if (!msg.message || msg.key.fromMe) return;
@@ -44,16 +46,7 @@ async function conectar() {
         const from = msg.key.remoteJid;
         const texto = (msg.message.conversation || msg.message.extendedTextMessage?.text || '').toLowerCase().trim();
 
-        const isImage = msg.message.imageMessage;
-        const isVideo = msg.message.videoMessage;
-        const quoted = msg.message.extendedTextMessage?.contextInfo?.quotedMessage;
-        const isQuotedImage = quoted?.imageMessage;
-        const isQuotedVideo = quoted?.videoMessage;
-
-        if (!isImage && !isVideo && !isQuotedImage && !isQuotedVideo &&
-            texto !== '/s' && texto !== '/s2') {
-            return;
-        }
+        if (texto !== '/s' && texto !== '/s2') return;
 
         console.log('📸 Criando sticker...');
 
@@ -63,7 +56,7 @@ async function conectar() {
             const sticker = new Sticker(buffer, {
                 pack: 'Bot do',
                 author: 'Dedão',
-                type: StickerTypes.FULL,     // FULL geralmente dá o melhor resultado sem sharp
+                type: StickerTypes.FULL,
                 categories: ['😎'],
                 quality: 80,
             });
@@ -74,7 +67,7 @@ async function conectar() {
 
         } catch (err) {
             console.error(err);
-            await sock.sendMessage(from, { text: '❌ Erro ao criar sticker. Tente outra imagem/vídeo.' });
+            await sock.sendMessage(from, { text: '❌ Erro ao criar sticker.' });
         }
     });
 }
